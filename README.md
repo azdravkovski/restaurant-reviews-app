@@ -19,3 +19,6 @@ For the **Restaurant Reviews** projects, you will incrementally convert a static
 
 **Stage Three** 
 TBA
+
+### Installation and deployment
+Follow the instructions [here](https://github.com/udacity/mws-restaurant-stage-2) to clone and run the API server. Then run `npm install` for dependencies and `python -m http.server 9000` for the local server. 
