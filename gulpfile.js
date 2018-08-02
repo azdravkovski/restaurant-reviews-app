@@ -1,7 +1,6 @@
 const gulp = require('gulp');
 const minifyCSS = require('gulp-minify-css');
 const concat = require('gulp-concat');
-const prefix = require('gulp-autoprefixer');
 const minify = require('gulp-minify');
 const imagemin = require('gulp-imagemin');
 
@@ -16,7 +15,6 @@ gulp.task('styles', function () {
     return gulp.src('css/*.css')
         .pipe(concat('styles.css'))
         .pipe(minifyCSS())
-        .pipe(prefix('last 2 versions'))
         .pipe(gulp.dest('public/css'))
 });
 
