@@ -6,9 +6,9 @@ const imagemin = require('gulp-imagemin');
 
 // Minifies JS
 gulp.task('js', function() {
-    gulp.src(['js/*.js', 'sw.js'])
+    gulp.src(['js/*.js'])
       .pipe(minify())
-      .pipe(gulp.dest('dist'))
+      .pipe(gulp.dest('public/js'))
   });
   
 gulp.task('styles', function () {

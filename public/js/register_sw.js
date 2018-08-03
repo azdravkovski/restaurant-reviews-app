@@ -2,44 +2,44 @@
  * Service Registration.
  */
 
-navigator.serviceWorker.register('./sw.js').then(function (reg) {
-    console.log('Service worker registered.');
+navigator.serviceWorker.register('./sw.js').then((registration) => {
+    console.log('Registered service worker.');
 
     if (!navigator.serviceWorker.controller) {
         return;
     }
 
-    if (reg.waiting) {
+    if (registration.waiting) {
         navigator.serviceWorker.controller.postMessage({ action: 'skipWaiting' });
     }
 
-    if (reg.installing) {
-        navigator.serviceWorker.addEventListener('statechange', function () {
+    if (registration.installing) {
+        navigator.serviceWorker.addEventListener('statechange', () => {
             if (navigator.serviceWorker.controller.state == 'installed') {
                 navigator.serviceWorker.controller.postMessage({ action: 'skipWaiting' });
             }
         });
     }
 
-    reg.addEventListener('updatefound', function () {
-        navigator.serviceWorker.addEventListener('statechange', function () {
+    registration.addEventListener('updatefound', () => {
+        navigator.serviceWorker.addEventListener('statechange', () => {
             if (navigator.serviceWorker.controller.state == 'installed') {
                 navigator.serviceWorker.controller.postMessage({ action: 'skipWaiting' });
             }
         });
     });
 
-}).catch(function () {
-    console.log('Service worker registration failed');
+}).catch(() => {
+    console.log('Failed to register service worker');
 });
 
 var refreshing;
-navigator.serviceWorker.addEventListener('controllerchange', function () {
+navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (refreshing) return;
     window.location.reload();
     refreshing = true;
 })
 
-navigator.serviceWorker.ready.then(function (swRegistration) {    
-    return swRegistration.sync.register('myFirstSync');
+navigator.serviceWorker.ready.then((serviceWorkerReg) => {    
+    return serviceWorkerReg.sync.register('first-sync');
 });
