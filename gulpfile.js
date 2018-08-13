@@ -28,7 +28,4 @@ gulp.task('default', function () {
     gulp.run('styles')
     gulp.run('js')
     gulp.run('images')
-    // gulp.watch('css/**/*.css', function () {
-    //     gulp.run('styles')
-    // })
 });

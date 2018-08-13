@@ -175,9 +175,9 @@ class DBHelper {
    */
   static imageUrlForRestaurant(restaurant) {
     if (restaurant.photograph) {
-      return (`/public/img/${restaurant.photograph}.webp`);
+      return (`/public/images/${restaurant.photograph}.webp`);
     } else {
-      return (`/public/img/placeholder.webp`);
+      return (`/public/images/placeholder.webp`);
     }
   }
 
