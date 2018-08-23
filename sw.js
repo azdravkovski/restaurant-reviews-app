@@ -1,46 +1,48 @@
-var CACHE = "restaurant-cache";
-var urlsCache = [
-  "/",
-  "/index.html",
-  "/restaurant.html",
-  "/public/css/styles.css",
-  "/public/js/dbhelper-min.js",
-  "/public/js/main-min.js",
-  "/public/js/restaurant_info-min.js",
-  "/public/js/register_sw-min.js",
-  "/node_modules/idb/lib/idb.js",
-  "/public/images/1.webp",
-  "/public/images/2.webp",
-  "/public/images/3.webp",
-  "/public/images/4.webp",
-  "/public/images/5.webp",
-  "/public/images/6.webp",
-  "/public/images/7.webp",
-  "/public/images/8.webp",
-  "/public/images/9.webp",
-  "/public/images/10.webp"
+const CACHE = "restaurant-cache";
+const RUNTIME = 'runtime';
+const urlsToCache = [
+	"/",
+	"index.html",
+	"restaurant.html",
+	"css/styles.css",
+	"js/dbhelper.js",
+	"js/main.js",
+	"js/restaurant_info.js",
+	"js/register_sw.js",
+	"/node_modules/idb/lib/idb.js",
+	"/public/images/1.webp",
+	"/public/images/2.webp",
+	"/public/images/3.webp",
+	"/public/images/4.webp",
+	"/public/images/5.webp",
+	"/public/images/6.webp",
+	"/public/images/7.webp",
+	"/public/images/8.webp",
+	"/public/images/9.webp",
+	"/public/images/10.webp"
 ];
 
-self.addEventListener("install", function(event) {
-  event.waitUntil(
-    caches.open(CACHE).then(function(cache) {
-      console.log("Cache started");
-      return cache.addAll(urlsCache);
-    })
-  );
+self.addEventListener("install", event => {
+	event.waitUntil(
+		caches.open(CACHE)
+			.then(cache => {
+				console.log("Cache started");
+				return cache.addAll(urlsToCache);
+			})
+	);
 });
 
-self.addEventListener('activate', function(event) {
+self.addEventListener('activate', event => {
+	console.log('activated sw');
+	const currentCaches = [CACHE, RUNTIME];
 	event.waitUntil(
-		caches.keys().then(function(cacheNames) {
-			return Promise.all(
-				cacheNames.filter(function(cacheName) {
-					return cacheName.startsWith('restaurant-') && cacheName != CACHE;
-				}).map(function(cacheName) {
-					return caches.delete(cacheName);
-				})    
-			);
-		})
+		caches.keys().then(cacheNames => {
+			return cacheNames.filter(cacheName => !currentCaches.includes(cacheName));
+		}).then(cachesToDelete => {
+			return Promise.all(cachesToDelete.map(cacheToDelete => {
+				return caches.delete(cacheToDelete);
+			}));
+		}).then(() => self.clients.claim())
 	);
 });
 
@@ -49,18 +51,14 @@ self.addEventListener('fetch', (event) => {
 	event.respondWith(
 		caches.match(event.request).then(response => {
 			if (response) {
-				// console.log('Found in cache:', event.request.url);
 				return response;
 			}
-			// console.log('Network request for ', event.request.url);
 			return fetch(event.request).then(networkResponse => {
 				if (networkResponse.status === 404) {
-					// console.log(networkResponse.status);
 					return;
 				}
-				return caches.open(CACHE).then(cache => {
+				return caches.open(RUNTIME).then(cache => {
 					cache.put(event.request.url, networkResponse.clone());
-					// console.log('Fetched and cached', event.request.url);
 					return networkResponse;
 				})
 			})
@@ -72,9 +70,9 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
-    console.log(event);
-	
-    if (event.data.action === 'skipWaiting') {
-       self.skipWaiting();
-    }
+	console.log(event);
+
+	if (event.data.action === 'skipWaiting') {
+		self.skipWaiting();
+	}
 });
