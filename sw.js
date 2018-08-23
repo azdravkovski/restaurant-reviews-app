@@ -33,7 +33,6 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener('activate', event => {
-	console.log('activated sw');
 	const currentCaches = [CACHE, RUNTIME];
 	event.waitUntil(
 		caches.keys().then(cacheNames => {
