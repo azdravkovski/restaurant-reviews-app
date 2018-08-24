@@ -24,25 +24,31 @@ window.initMap = () => {
  * Get current restaurant from page URL.
  */
 fetchRestaurantFromURL = (callback) => {
-  if (self.restaurant) {
-    callback(null, self.restaurant)
-    return;
-  }
-  const id = getParameterByName('id');
-  if (!id) {
-    error = 'No restaurant id in URL'
-    callback(error, null);
-  } else {
-    DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
-        console.error(error);
-        return;
-      }
-      fillRestaurantHTML();
-      callback(null, restaurant)
-    });
-  }
+	if (self.restaurant) {
+		callback(null, self.restaurant)
+		return;
+	}
+	const id = getParameterByName('id');
+	if (!id) {
+		error = 'No restaurant id in URL'
+		callback(error, null);
+	} else {
+		DBHelper.fetchRestaurantById(id, (error, restaurant) => {
+			self.restaurant = restaurant;
+			if (!restaurant) {
+				console.error(error);
+				return;
+			}
+			DBHelper.fetchRestaurantReviews(self.restaurant, (error, reviews) => {
+				self.restaurant.reviews = reviews;
+				if (!reviews) {
+					console.error(error);
+				}
+				fillRestaurantHTML();
+				callback(null, restaurant)
+			});
+		});
+	}
 }
 
 /**

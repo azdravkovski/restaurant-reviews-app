@@ -1,5 +1,3 @@
-
-
 let fetchedCuisines;
 let fetchedNeighborhoods;
 
@@ -14,7 +12,7 @@ class DBHelper {
    */
   static get DATABASE_URL() {
     const port = 1337 // Change this to your server port
-    return `http://localhost:${port}/restaurants`;
+    return `http://localhost:${port}`;
   }
 
   /**
@@ -25,8 +23,18 @@ class DBHelper {
     if (!navigator.serviceWorker) {
       return Promise.resolve();
     } else {
-      return idb.open('restaurants', 1, function (upgradeDb) {
-        upgradeDb.createObjectStore('all-restaurants', { keyPath: 'id' });
+      return idb.open('restaurants', 2, function(upgradeDb) {
+        switch (upgradeDb.oldVersion) {
+          case 0:
+            upgradeDb.createObjectStore('all-restaurants', {
+              keyPath: 'id'
+            });
+          case 1:
+            const reviewsStore = upgradeDb.createObjectStore('all-reviews', {
+              keyPath: 'id'
+            });
+            reviewsStore.createIndex('restaurant', 'restaurant_id');
+        }
       });
     }
   }
@@ -41,7 +49,7 @@ class DBHelper {
       const store = tx.objectStore('all-restaurants');
       store.getAll().then(results => {
         if (results.length === 0) {
-          fetch(`${DBHelper.DATABASE_URL}`)
+          fetch(`${DBHelper.DATABASE_URL}/restaurants`)
             .then(response => {
               return response.json();
             })
@@ -162,6 +170,48 @@ class DBHelper {
       }
     });
   }
+
+  /**
+	 * Fetch all reviews for a restaurant
+	 */
+	static fetchRestaurantReviews(restaurant, callback) {
+		DBHelper.dbPromise.then(db => {
+			if (!db) return;
+			// 1. Check if there are reviews in the IDB
+			const tx = db.transaction('all-reviews');
+			const store = tx.objectStore('all-reviews');
+			store.getAll().then(results => {
+				if (results && results.length > 0) {
+          // Continue with reviews from IDB
+          console.log(results);
+					callback(null, results);
+				} else {
+					// 2. If there are no reviews in the IDB, fetch reviews from the network
+					fetch(`${DBHelper.DATABASE_URL}/reviews/?restaurant_id=${restaurant.id}`)
+					.then(response => {
+						return response.json();
+					})
+					.then(reviews => {
+						this.dbPromise.then(db => {
+							if (!db) return;
+							// 3. Put fetched reviews into IDB
+							const tx = db.transaction('all-reviews', 'readwrite');
+							const store = tx.objectStore('all-reviews');
+							reviews.forEach(review => {
+								store.put(review);
+							})
+						});
+						// Continue with reviews from network
+						callback(null, reviews);
+					})
+					.catch(error => {
+						// Unable to fetch reviews from network
+						callback(error, null);
+					})
+				}
+			})
+		});
+	}
 
   /**
    * Restaurant page URL.
