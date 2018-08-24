@@ -24,25 +24,31 @@ window.initMap = () => {
  * Get current restaurant from page URL.
  */
 fetchRestaurantFromURL = (callback) => {
-  if (self.restaurant) {
-    callback(null, self.restaurant)
-    return;
-  }
-  const id = getParameterByName('id');
-  if (!id) {
-    error = 'No restaurant id in URL'
-    callback(error, null);
-  } else {
-    DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
-        console.error(error);
-        return;
-      }
-      fillRestaurantHTML();
-      callback(null, restaurant)
-    });
-  }
+	if (self.restaurant) {
+		callback(null, self.restaurant)
+		return;
+	}
+	const id = getParameterByName('id');
+	if (!id) {
+		error = 'No restaurant id in URL'
+		callback(error, null);
+	} else {
+		DBHelper.fetchRestaurantById(id, (error, restaurant) => {
+			self.restaurant = restaurant;
+			if (!restaurant) {
+				console.error(error);
+				return;
+			}
+			DBHelper.fetchRestaurantReviews(self.restaurant, (error, reviews) => {
+				self.restaurant.reviews = reviews;
+				if (!reviews) {
+					console.error(error);
+				}
+				fillRestaurantHTML();
+				callback(null, restaurant)
+			});
+		});
+	}
 }
 
 /**
@@ -54,6 +60,13 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
 
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
+
+	const favoriteBox = document.getElementById("favorite-box");
+  favoriteBox.checked = restaurant.is_favorite;
+  favoriteBox.addEventListener("change", event => {
+    DBHelper.toggleFavorite(restaurant, event.target.checked);
+  });
+
 
   const image = document.getElementById('restaurant-img');
   image.className = 'restaurant-img'
@@ -136,6 +149,23 @@ createReviewHTML = (review) => {
 
   return li;
 }
+
+const reviewForm = document.getElementById("review-form");
+reviewForm.addEventListener("submit", function(event) {
+  event.preventDefault();
+  let review = { restaurant_id: self.restaurant.id };
+  const formdata = new FormData(reviewForm);
+  for (var [key, value] of formdata.entries()) {
+    review[key] = value;
+  }
+  DBHelper.submitReview(review)
+    .then(data => {
+      const ul = document.getElementById("reviews-list");
+      ul.appendChild(createReviewHTML(review));
+      reviewForm.reset();
+    })
+    .catch(error => console.error(error));
+});
 
 /**
  * Add restaurant name to the breadcrumb navigation menu
