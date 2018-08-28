@@ -45,28 +45,28 @@ self.addEventListener('activate', event => {
 	);
 });
 
+self.addEventListener('fetch', event => {
+  const storageUrl = event.request.url.split(/[?#]/)[0];
 
-self.addEventListener('fetch', (event) => {
-	event.respondWith(
-		caches.match(event.request).then(response => {
-			if (response) {
-				return response;
-			}
-			return fetch(event.request).then(networkResponse => {
-				if (networkResponse.status === 404) {
-					return;
-				}
-				return caches.open(RUNTIME).then(cache => {
-					cache.put(event.request.url, networkResponse.clone());
-					return networkResponse;
-				})
-			})
-		}).catch(error => {
-			console.log('Error:', error);
-			return;
-		})
-	);
+  if (storageUrl.startsWith(self.location.origin)) {
+    event.respondWith(
+      caches.match(storageUrl).then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return caches.open(RUNTIME).then(cache => {
+          return fetch(event.request).then(response => {
+            return cache.put(storageUrl, response.clone()).then(() => {
+              return response;
+            });
+          });
+        });
+      })
+    );
+  }
 });
+
 
 self.addEventListener('message', (event) => {
 	console.log(event);
