@@ -4,7 +4,7 @@ const urlsToCache = [
 	"/",
 	"index.html",
 	"restaurant.html",
-	"css/styles.css",
+	"public/css/styles.css",
 	"public/js/dbhelper-min.js",
 	"public/js/main-min.js",
 	"public/js/restaurant_info-min.js",
